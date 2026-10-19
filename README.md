@@ -1,66 +1,99 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# LENTRA AI – Traffic Law Chatbot with RAG
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+LENTRA AI is a chatbot that answers questions about Indonesian traffic law (**UU No. 22 Tahun 2009 tentang Lalu Lintas dan Angkutan Jalan**). Every answer cites the relevant **article (pasal)**, **sanction**, and **regulation source**, using a Retrieval-Augmented Generation (RAG) pipeline on top of a local LLM.
 
-## About Laravel
+Built as a team project for the *Software Engineering Project (Proyek Perangkat Lunak)* course at Telkom University, using Scrum.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- 💬 **AI chat**: ask traffic law questions in plain Indonesian
+- 📚 **Grounded answers**: responses cite the article, sanction, and source regulation
+- 🔎 **Semantic search**: finds the most relevant articles, even without exact keywords
+- 🗂️ **Regulation management**: admins can add, edit, and remove regulation documents
+- 🕘 **Consultation history**: users can view and switch between past chat sessions
+- 📴 **Offline mode**: the app stays usable when the AI service is unavailable
+- 🛡️ **Rate limiting** on chat endpoints to prevent spam
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## How it works (RAG pipeline)
 
-## Learning Laravel
+```
+Regulation documents
+        │  chunking
+        ▼
+   Text chunks ──► Embeddings (nomic-embed-text) ──► Vector store
+                                                        │
+User question ──► Embedding ──► Semantic search (cosine similarity)
+                                                        │
+                                         Top relevant articles
+                                                        ▼
+                         Context + question ──► LLM (Mistral via Ollama)
+                                                        │
+                                              Post-processing
+                                                        ▼
+                                  Answer + article + sanction + source
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Tech stack
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+| Layer | Technology |
+|---|---|
+| Backend | Laravel 11, PHP 8.2 |
+| AI / LLM | Ollama: Mistral (main), Gemma 3 4B (fallback), nomic-embed-text (embeddings) |
+| Database | SQLite |
+| Process | Scrum |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## My contributions
 
-## Laravel Sponsors
+I worked on the core AI pipeline and several supporting features (8 product backlog items):
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Document chunking for regulation files
+- Embedding generation for document chunks
+- Vector database storage
+- Semantic search
+- LLM answer post-processing
+- Regulation management database
+- Consultation history storage
+- Offline mode
 
-### Premium Partners
+## Getting started
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+**Requirements:** PHP 8.2+, Composer, Node.js, and [Ollama](https://ollama.com)
 
-## Contributing
+```bash
+# 1. Clone and install dependencies
+git clone https://github.com/Alifmikail/lentra-ai.git
+cd lentra-ai
+composer install
+npm install && npm run build
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# 2. Set up environment
+cp .env.example .env
+php artisan key:generate
+touch database/database.sqlite
+php artisan migrate
 
-## Code of Conduct
+# 3. Pull the AI models
+ollama pull mistral
+ollama pull gemma3:4b
+ollama pull nomic-embed-text
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# 4. Build the knowledge base (vector store)
+php artisan rag:seed
 
-## Security Vulnerabilities
+# 5. Run the app
+php artisan serve
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Then open http://localhost:8000.
 
-## License
+## Team
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Built by Kelompok F, SI4707, Telkom University.
+
+> ⚠️ Answers are generated by AI and are for information only. They are not legal advice.<img width="1172" height="701" alt="IMG_8596" src="https://github.com/user-attachments/assets/1d4beb8d-4e79-4deb-9ef1-1c7c7169a5dd" />
+<img width="1172" height="701" alt="IMG_8596" src="https://github.com/user-attachments/assets/5b2b8b9a-32f7-4c33-a097-c6a7fa021bcd" />
+<img width="1172" height="701" alt="IMG_8596" src="https://github.com/user-attachments/assets/5c273636-4dc8-42b4-a93e-6ce34ee5ea90" />
+
+Built by Kelompok F, SI4707, Telkom University.
+
+> ⚠️ Answers are generated by AI and are for information only. They are not legal advice.
